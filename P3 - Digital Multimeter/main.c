@@ -117,7 +117,9 @@ int main(void) {
             captureperiod = capturevalue[1] - capturevalue[0];
             __enable_irq();
 
-            frequency =
+            frequency = convert_to_frequency(int captureperiod);
+
+
         }
         /*if (global_flag == 1)                              //check if value has been updated
         {
