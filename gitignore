@@ -1,7 +1,4 @@
-/.metadata/
-Assgn3/.cproject
 
-Assgn3/Debug/*
 *.obj
 *.map
 *.out
@@ -21,4 +18,3 @@ Assgn3/Debug/*
 *.dot
 *.md5
 *.prefs
-Assgn5/Debug/makefile
