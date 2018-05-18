@@ -1,3 +1,19 @@
+//******************************************************************************
+//
+//   - The display_in_terminal.c program serves the primary purpose of displaying
+//   waveform attributes that the digital multimeter is required to sample
+//   - These attributes are displayed on a Serial Terminal via inspiration from
+//   VT100 protocol
+//   - The serial terminal displays the RMS voltage, DC voltage, peak-to-peak
+//   voltage, and frequencies of the waveforms
+//   - The terminal also displays the RMS and DC values via a bar graph
+//
+//   Aiku Shintani & Chris Adams
+//   Cal Poly San Luis Obispo EE
+//   May 17 (updated)
+//******************************************************************************
+
+
 #include "msp.h"
 #include "stdio.h"
 /*
@@ -8,18 +24,18 @@
  */
 void display_in_terminal(char *pointer);
 
-//add the frequency, rms voltage, dc offset, and mode as inputs to this function
-void string_to_terminal(float RMS_voltage, float DC_voltage, float frequency){
+//takes float variable inputs from the main and sets the appropriate settings of the bar graph and terminal display
+void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage, float frequency){
     static char statements[1000];
     int data;
     float DC_bar_graph_ticks = 0;
     float RMS_bar_graph_ticks = 0;
     char DC3_30 = ' ', DC3_08 = ' ', DC2_86 = ' ', DC2_64 = ' ', DC2_42 = ' ', DC2_20 = ' ',
          DC1_98 = ' ', DC1_76 = ' ', DC1_54 = ' ', DC1_32 = ' ', DC1_10 = ' ', DC0_88 = ' ',
-         DC0_66 = ' ', DC0_44 = ' ', DC0_22 = ' ';
+         DC0_66 = ' ', DC0_44 = ' ', DC0_22 = ' ', DC0_00 = '*';
     char RMS3_30 = ' ', RMS3_08 = ' ', RMS2_86 = ' ', RMS2_64 = ' ', RMS2_42 = ' ', RMS2_20 = ' ',
          RMS1_98 = ' ', RMS1_76 = ' ', RMS1_54 = ' ', RMS1_32 = ' ', RMS1_10 = ' ', RMS0_88 = ' ',
-         RMS0_66 = ' ', RMS0_44 = ' ', RMS0_22 = ' ';
+         RMS0_66 = ' ', RMS0_44 = ' ', RMS0_22 = ' ', RMS0_00 = '*';
 
 
     if (DC_voltage > 0.22)
@@ -125,32 +141,31 @@ void string_to_terminal(float RMS_voltage, float DC_voltage, float frequency){
                               " |RMS Voltage: %.2fV      |      |   1.54-  %c       %c       |\r\n"
                               " |                        |      |   1.32-  %c       %c       |\r\n"
                               " |                        |      |   1.10-  %c       %c       |\r\n"
-                              " |DC Voltage:  %.2fV      |      |   0.88-  %c       %c       |\r\n"
+                              " |Peak-to-Peak: %.2fV     |      |   0.88-  %c       %c       |\r\n"
                               " |                        |      |   0.66-  %c       %c       |\r\n"
                               " |                        |      |   0.44-  %c       %c       |\r\n"
-                              " |Frequency:   %.2fHz  |      |   0.22-  %c       %c       |\r\n"
-                              " |                        |      |   0.00-                  |\r\n"
+                              " |DC Voltages:  %.2fV     |      |   0.22-  %c       %c       |\r\n"
+                              " |                        |      |   0.00-  %c       %c       |\r\n"
                               " |                        |      |--------------------------|\r\n"
-                              " |                        |      |          DC      RMS     |\r\n"
+                              " |Frequency:   %.2fHz     |      |          DC      RMS     |\r\n"
                               " -------------------------       ---------------------------|",   DC3_30, RMS3_30, DC3_08, RMS3_08, DC2_86, RMS2_86, DC2_64, RMS2_64, DC2_42, RMS2_42,DC2_20, RMS2_20,
                                                                                                  DC1_98, RMS1_98, DC1_76, RMS1_76, RMS_voltage, DC1_54,RMS1_54,  DC1_32, RMS1_32, DC1_10, RMS1_10,
-                                                                                                 DC_voltage, DC0_88,  RMS0_88, DC0_66,  RMS0_66,DC0_44,  RMS0_44, frequency, DC0_22,  RMS0_22);
+                                                                                                 peak_to_peak, DC0_88, RMS0_88, DC0_66,  RMS0_66, DC0_44,  RMS0_44,  DC_voltage, DC0_22,  RMS0_22,
+                                                                                                 DC0_00, RMS0_00, frequency);
 
     //data = sprintf(statements, "Digital Multimeter %.2f:%d", 5.00, 2);  //float with two decimal places, d= decimal
     display_in_terminal(statements);
 
 }
 
+//increment pointer and address the characters in the sprintf statement above and send to the terminal
 void display_in_terminal(char *pointer){
 
     while(*pointer){
-
         while(!(EUSCI_A0->IFG & EUSCI_A_IFG_TXIFG));
         EUSCI_A0->TXBUF = *pointer;
         pointer ++;
-
     }
-
 }
 
 

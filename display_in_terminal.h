@@ -10,7 +10,7 @@
 
 
 void display_in_terminal(char *pointer);
-void string_to_terminal(float RMS_voltage, float DC_voltage, float frequency);
+void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage, float frequency);
 
 
 #endif /* DISPLAY_IN_TERMINAL_H_ */
