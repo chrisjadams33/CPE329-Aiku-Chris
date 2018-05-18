@@ -15,27 +15,27 @@ int set_DCO(int clk_freq)
     if (clk_freq == FREQ_1_5MHz)
     {
         CS->CTL0 = CS_CTL0_DCORSEL_0;       // 1.5MHz
-        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3;
+        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3 | CS_CTL1_DIVS_7;
     }
     else if (clk_freq == FREQ_3MHz)
     {
         CS -> CTL0 = CS_CTL0_DCORSEL_1;     // 3MHz
-        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3;
+        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3 | CS_CTL1_DIVS_7;
     }
     else if (clk_freq == FREQ_6MHz)
     {
         CS -> CTL0 = CS_CTL0_DCORSEL_2;     // 6MHz
-        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3;
+        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3 | CS_CTL1_DIVS_7;
     }
     else if (clk_freq == FREQ_12MHz)
     {
         CS -> CTL0 = CS_CTL0_DCORSEL_3;     // 12MHz
-        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3;
+        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3 | CS_CTL1_DIVS_7;
     }
     else if (clk_freq == FREQ_24MHz)
     {
         CS -> CTL0 = CS_CTL0_DCORSEL_4;     // 24MHz
-        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3 | CS_CTL1_DIVS_4;
+        CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3 | CS_CTL1_DIVS_7;
     }    
     else if (clk_freq == FREQ_48MHz)
     {
