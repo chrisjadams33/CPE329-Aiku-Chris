@@ -14,6 +14,7 @@ void move_left(int move);
 void move_down(int move);
 void move_topleft(void);
 void transmit_char(char data);
+void hide_cursor(void);
 
 
 #endif /* TERMINAL_COMMANDS_H_ */

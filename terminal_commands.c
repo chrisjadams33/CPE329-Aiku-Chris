@@ -7,6 +7,7 @@ void move_down(int move);
 void move_topleft(void);
 void transmit_char(char data);
 void move_right(int move);
+void hide_cursor(void);
 
 
 void choose_address(int horiz, int vert){
@@ -62,5 +63,14 @@ void transmit_char(char data){
     while(!(EUSCI_A0->IFG & EUSCI_A_IFG_TXIFG));
         //send characters on the TXBUF
         EUSCI_A0->TXBUF = data;
+}
+
+void hide_cursor(void){
+    transmit_char(27); //ESC
+    transmit_char(91); //[
+    transmit_char(63);
+    transmit_char(50);
+    transmit_char(53);
+    transmit_char(73);
 }
 
