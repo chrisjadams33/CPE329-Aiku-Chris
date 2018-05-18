@@ -25,17 +25,19 @@
 void display_in_terminal(char *pointer);
 
 //takes float variable inputs from the main and sets the appropriate settings of the bar graph and terminal display
-void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage, float frequency){
+void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage, float frequency, int mode){
     static char statements[1000];
     int data;
     float DC_bar_graph_ticks = 0;
     float RMS_bar_graph_ticks = 0;
+    int display = 0;
     char DC3_30 = ' ', DC3_08 = ' ', DC2_86 = ' ', DC2_64 = ' ', DC2_42 = ' ', DC2_20 = ' ',
          DC1_98 = ' ', DC1_76 = ' ', DC1_54 = ' ', DC1_32 = ' ', DC1_10 = ' ', DC0_88 = ' ',
          DC0_66 = ' ', DC0_44 = ' ', DC0_22 = ' ', DC0_00 = '*';
     char RMS3_30 = ' ', RMS3_08 = ' ', RMS2_86 = ' ', RMS2_64 = ' ', RMS2_42 = ' ', RMS2_20 = ' ',
          RMS1_98 = ' ', RMS1_76 = ' ', RMS1_54 = ' ', RMS1_32 = ' ', RMS1_10 = ' ', RMS0_88 = ' ',
          RMS0_66 = ' ', RMS0_44 = ' ', RMS0_22 = ' ', RMS0_00 = '*';
+    char first_letter = ' ', second_letter = ' ';
 
 
     if (DC_voltage > 0.22)
@@ -128,14 +130,31 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
             RMS0_22 = '*';
     }
 
+    if (mode == 0)
+    {
+        first_letter = 'A';
+        second_letter = 'C';
+        display = 1;
+    }
+    else if (mode == 1)
+    {
+        first_letter = 'D';
+        second_letter = 'C';
+        display = 1;
+    }
+    else if (mode == 2)
+    {
+        display = 0;
+    }
 
+    if(display == 1){
     data = sprintf(statements," -------------------------        ---------------------------\r\n"
                               " |      CPE329 - P3       |      |   3.30-  %c       %c       |\r\n"
                               " |                        |      |   3.08-  %c       %c       |\r\n"
                               " |                        |      |   2.86-  %c       %c       |\r\n"
                               " |   DIGITAL MULTIMETER   |      |   2.64-  %c       %c       |\r\n"
                               " |------------------------|      |   2.42-  %c       %c       |\r\n"
-                              " |Mode:                   |      |   2.20-  %c       %c       |\r\n"
+                              " |Mode:        %c%c       |      |   2.20-  %c       %c       |\r\n"
                               " |                        |      |   1.98-  %c       %c       |\r\n"
                               " |                        |      |   1.76-  %c       %c       |\r\n"
                               " |RMS Voltage: %.2fV      |      |   1.54-  %c       %c       |\r\n"
@@ -148,13 +167,14 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
                               " |                        |      |   0.00-  %c       %c       |\r\n"
                               " |                        |      |--------------------------|\r\n"
                               " |Frequency:   %.2fHz     |      |          DC      RMS     |\r\n"
-                              " -------------------------       ---------------------------|",   DC3_30, RMS3_30, DC3_08, RMS3_08, DC2_86, RMS2_86, DC2_64, RMS2_64, DC2_42, RMS2_42,DC2_20, RMS2_20,
-                                                                                                 DC1_98, RMS1_98, DC1_76, RMS1_76, RMS_voltage, DC1_54,RMS1_54,  DC1_32, RMS1_32, DC1_10, RMS1_10,
-                                                                                                 peak_to_peak, DC0_88, RMS0_88, DC0_66,  RMS0_66, DC0_44,  RMS0_44,  DC_voltage, DC0_22,  RMS0_22,
-                                                                                                 DC0_00, RMS0_00, frequency);
+                              " -------------------------       ---------------------------|",   DC3_30, RMS3_30, DC3_08, RMS3_08, DC2_86, RMS2_86, DC2_64, RMS2_64, DC2_42, RMS2_42,first_letter,
+                                                                                                 second_letter, DC2_20, RMS2_20,DC1_98, RMS1_98, DC1_76, RMS1_76, RMS_voltage, DC1_54,RMS1_54,  DC1_32,
+                                                                                                 RMS1_32, DC1_10, RMS1_10, peak_to_peak, DC0_88, RMS0_88, DC0_66,  RMS0_66, DC0_44,  RMS0_44,  DC_voltage,
+                                                                                                 DC0_22,  RMS0_22, DC0_00, RMS0_00, frequency);
 
     //data = sprintf(statements, "Digital Multimeter %.2f:%d", 5.00, 2);  //float with two decimal places, d= decimal
     display_in_terminal(statements);
+    }
 
 }
 
