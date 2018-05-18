@@ -8,6 +8,7 @@
 #ifndef TERMINAL_COMMANDS_H_
 #define TERMINAL_COMMANDS_H_
 
+void choose_address(int horiz, int vert);
 void move_right(int move);
 void move_left(int move);
 void move_down(int move);

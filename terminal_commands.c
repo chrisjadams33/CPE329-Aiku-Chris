@@ -1,11 +1,22 @@
 #include "msp.h"
 
+void choose_address(int horiz, int vert);
 void move_left(int move);
 void move_down(int move);
 void move_down(int move);
 void move_topleft(void);
 void transmit_char(char data);
+void move_right(int move);
 
+
+void choose_address(int horiz, int vert){
+    transmit_char(27); //ESC
+    transmit_char(91); //[
+    transmit_char(48+horiz); //spaces to move cursor horizontally
+    transmit_char(58);      //spaces to move cursor vertically
+    transmit_char(48+vert);
+    transmit_char(72); //direction: right
+    }
 
 void move_right(int move){
     transmit_char(27); //ESC
