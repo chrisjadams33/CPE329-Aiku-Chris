@@ -25,6 +25,7 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
 
     //statements[x] fits x number of characters in it
     static char statements[1000];
+    static int key = 0;
     int data;
     float DC_bar_graph_ticks = 0;
     float RMS_bar_graph_ticks = 0;
@@ -36,7 +37,10 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
          RMS1_98 = ' ', RMS1_76 = ' ', RMS1_54 = ' ', RMS1_32 = ' ', RMS1_10 = ' ', RMS0_88 = ' ',
          RMS0_66 = ' ', RMS0_44 = ' ', RMS0_22 = ' ', RMS0_00 = '*';
     char first_letter = ' ', second_letter = ' ';
-    char thousands = " ";
+    char* before_freq = ' ';
+    //char thousands = ' ';
+    //char hundreds = ' ';
+    //char tens = ' ';
 
     //char wave_display;
     //char Sinusoid = "Sinusoid";
@@ -155,23 +159,47 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
         second_letter = 'C';
         display = 1;
     }
-    else if (mode == 2)
+    else if (mode > 1)
     {
         display = 0;
     }
 
     if (frequency >= 1000)
-        thousands = " ";
-    else if (frequency >= 100)
-        thousands = "  ";
-    else if (frequency >= 10)
-        thousands = "   ";
-    else if (frequency < 10)
-        thousands = "    ";
+     {
+         //thousands = ' ';
+         //hundreds = 0x18;
+         //tens = 0x08;
+        before_freq = " ";
+     }
+     else if (frequency >= 100)
+     {
+         //thousands = ' ';
+         //hundreds = 0x08;
+         //tens = 0x08;
+         before_freq = "  ";
+     }
+     else if (frequency >= 10)
+     {
+         //thousands = ' ';
+         //hundreds = ' ';
+         //tens = 0x08;
+         before_freq = "   ";
+     }
+     else if (frequency < 10)
+     {
+         //thousands = ' ';
+         //hundreds = ' ';
+         //tens = 0x08;
+         before_freq = "    ";
+     }
+
+
 
 
     if(display == 1)
     {
+        if (key == 1)
+            move_topleft();
         //place the characters in the statements argument in the order to use it in the display_in_terminal function
         data = sprintf(statements," -------------------------        ---------------------------\r\n"
                                   " |      CPE329 - P3       |      |   3.30-  %c       %c       |\r\n"
@@ -179,7 +207,7 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
                                   " |                        |      |   2.86-  %c       %c       |\r\n"
                                   " |   DIGITAL MULTIMETER   |      |   2.64-  %c       %c       |\r\n"
                                   " |------------------------|      |   2.42-  %c       %c       |\r\n"
-                                  " |Mode:        %c%c       |      |   2.20-  %c       %c       |\r\n"
+                                  " |Mode:        %c%c         |      |   2.20-  %c       %c       |\r\n"
                                   " |                        |      |   1.98-  %c       %c       |\r\n"
                                   " |                        |      |   1.76-  %c       %c       |\r\n"
                                   " |RMS Voltage: %.2fV      |      |   1.54-  %c       %c       |\r\n"
@@ -191,14 +219,16 @@ void string_to_terminal(float RMS_voltage, float peak_to_peak, float DC_voltage,
                                   " |DC Voltages:  %.2fV     |      |   0.22-  %c       %c       |\r\n"
                                   " |                        |      |   0.00-  %c       %c       |\r\n"
                                   " |                        |      |--------------------------|\r\n"
-                                  " |Frequency:   %s%.2fHz     |      |          DC      RMS     |\r\n"
-                                  " -------------------------       ---------------------------|",   DC3_30, RMS3_30, DC3_08, RMS3_08, DC2_86, RMS2_86, DC2_64, RMS2_64, DC2_42, RMS2_42,first_letter,
+                                  " |Frequency: %s%.2fHz   |      |          DC      RMS     |\r\n"
+                                  " -------------------------       ----------------------------",   DC3_30, RMS3_30, DC3_08, RMS3_08, DC2_86, RMS2_86, DC2_64, RMS2_64, DC2_42, RMS2_42,first_letter,
                                                                                                      second_letter, DC2_20, RMS2_20,DC1_98, RMS1_98, DC1_76, RMS1_76, RMS_voltage, DC1_54,RMS1_54,  DC1_32,
                                                                                                      RMS1_32, DC1_10, RMS1_10, peak_to_peak, DC0_88, RMS0_88, DC0_66,  RMS0_66, DC0_44,  RMS0_44,  DC_voltage,
-                                                                                                     DC0_22,  RMS0_22, DC0_00, RMS0_00, thousands, frequency);
+                                                                                                     DC0_22,  RMS0_22, DC0_00, RMS0_00, before_freq, frequency)
+                                                                                                             ;
 
         //data = sprintf(statements, "Digital Multimeter %.2f:%d", 5.00, 2);  //float with two decimal places, d= decimal
         display_in_terminal(statements);
+        key = 1;
     }
 
 }

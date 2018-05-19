@@ -18,8 +18,7 @@ int min_check(uint16_t data)
 int max_check(uint16_t data)
 {
     static int maximum = 0;
-    if (maximum < data)
-        maximum = data;
+
     return maximum;
 }
 

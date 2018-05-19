@@ -74,3 +74,10 @@ void hide_cursor(void){
     transmit_char(73);
 }
 
+void clear_screen(void){
+    transmit_char(27); //ESC
+    transmit_char(91); //[
+    transmit_char(50);
+    transmit_char(74);
+}
+

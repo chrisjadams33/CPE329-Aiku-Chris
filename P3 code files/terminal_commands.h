@@ -15,6 +15,7 @@ void move_down(int move);
 void move_topleft(void);
 void transmit_char(char data);
 void hide_cursor(void);
+void clear_screen(void);
 
 
 #endif /* TERMINAL_COMMANDS_H_ */

@@ -14,30 +14,34 @@ float get_freq(void){
     float frequency, calibrated_frequency = 0;
     frequency = 0;
 
-    TIMER_A0->CCTL[2] &=~ TIMER_A_CCTLN_COV;                //clear overflow
+    //TIMER_A0->CCTL[2] &=~ TIMER_A_CCTLN_COV;                //clear overflow
+    TIMER_A0->CCTL[2] &=~ 1;                        //clear capture flag
+    TIMER_A0 -> CTL &=~ TIMER_A_CTL_IFG;
 
     while((TIMER_A0->CCTL[2] & 1) == 0);            //wait until capture interrupt flag
+
     start = TIMER_A0->CCR[2];                       //save starting CCR value
     TIMER_A0->CCTL[2] &=~ 1;                        //clear capture flag
 
-    while((TIMER_A0->CCTL[2] & 1) == 0);             //wait until capture interrupt flag                    //CLOSED THE WHILE LOOP WHEN CALIBRATING;
+    while((TIMER_A0->CCTL[2] & 1) == 0)
+    {
+        if (TIMER_A0->CTL & TIMER_A_CTL_IFG)
+            difference += max_count;
+        TIMER_A0 -> CTL &=~ TIMER_A_CTL_IFG;
+    }
+
     end = TIMER_A0->CCR[2];
-                       //save ending CCR
+
+    //if (end < start)
+        //difference += max_count;
 
     //add and sub end and start to difference count
     difference += end;
     difference -= start;
 
-    if (TIMER_A0->CCTL[2] & TIMER_A_CCTLN_COV)           //check for overflow
-    {
-        difference += max_count;                //add max timer value
-        TIMER_A0->CCTL[2] &=~ TIMER_A_CCTLN_COV;                //clear overflow
-    }
-
-
-    frequency = 1/(difference/(375*1e3));                     //divide # of ticks by Timer A frequency
-
+    frequency = 375000/(difference);                     //divide # of ticks by Timer A frequency
     calibrated_frequency = 1.008125*(frequency) + 0.011625;
+
 
     return calibrated_frequency;
 }

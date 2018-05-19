@@ -1,32 +1,19 @@
-//  MSP432P401 Demo - ADC14, Sample A1, AVcc Ref, Set P1.0 if A1 > 0.5*AVcc
 //
-//   Description: A single sample is made on A1 with reference to AVcc.
-//   Software sets ADC14_CTL0_SC to start sample and conversion - ADC14_CTL0_SC
-//   automatically cleared at EOC. ADC14 internal oscillator times sample (16x)
-//   and conversion. In Mainloop MSP432 waits in LPM0 to save power until ADC14
-//   conversion complete, ADC14_ISR will force exit from LPM0 in Mainloop on
-//   reti. If A0 > 0.5*AVcc, P1.0 set, else reset. The full, correct handling of
-//   and ADC14 interrupt is shown as well.
-//
-//
-//                MSP432P401x
-//             -----------------
-//         /|\|              XIN|-
-//          | |                 |
-//          --|RST          XOUT|-
-//            |                 |
-//        >---|P5.4/A1      P1.0|-->LED
-//
-//   William Goh
-//   Texas Instruments Inc.
-//   June 2016 (updated) | November 2013 (created)
-//   Built with CCSv6.1, IAR, Keil, GCC
+
 //******************************************************************************
 #include "msp.h"
-#include "delay_functions.h"
-#include "convert_data.h"
+//#include "delay_functions.h"
+//#include "convert_data.h"
 #include "set_DCO.h"
+//#include "min_max_check.h"
+//#include "convert_to_frequency.h"
+//#include "get_values.h"
+#include "display_in_terminal.h"
+#include "sqaure_root.h"
+#include "terminal_commands.h"
+#include "init_DMM.h"
 
+//frequency definitions
 #define FREQ_1_5MHz  1500000
 #define FREQ_3MHz    3000000
 #define FREQ_6MHz    6000000
@@ -34,119 +21,171 @@
 #define FREQ_24MHz   24000000
 #define FREQ_48MHz   48000000
 
-int global_flag = 0;
-uint16_t digital_data;
-int captureflag = 0;
-int captureperiod = 0;
+int global_flag = 0;                    //flag that determines when ADC has samples
+//int ms_flag = 0;
+uint16_t digital_data;                  //data value returned from ADC
+int mode = 0;                           //mode = 0 for AC, 1 for DC
+int timer_count = 0;                    //counts overflows on timerA
+int cature_count = 0;                   //counts 0-1 for capture index
+int capturevalue[2];                    //where capture values are saved
+int capture_flag = 0;                   //flag set when 2 rising edges captured
+int difference = 0;
 
 int main(void) {
-    volatile unsigned int i;
-    int clk = FREQ_12MHz;
-    static uint32_t calibrated_data;
-    uint32_t num_return = 0;
-    char answer[] = "0.000";
-    int frequency
-    int x = 0;
+    //volatile unsigned int i;
+    //clock speed
+    int clk = FREQ_24MHz;
 
-    //SMCLK has been divided by 128
-    set_DCO(clk);
+    //RMS, PP, DC raw variables
+    int RMS_data = 0;
+    int peak2peak = 0;
+    int DC_voltage = 0;
+
+    //calibrated data in uV
+    int calibrated_RMS, calibrated_pp, calibrated_DC;
+
+    //converted answers sent to terminal
+    float pp_answer, RMS_answer, DC_answer;
+    float frequency;
+
+    //used in calculations
+    int samples = 50000;
+    uint64_t squared_sum = 0;
+    uint32_t square_avg;
+    uint16_t data;
+    uint32_t total = 0;
+    int maximum = 0;
+    int minimum = 16384;
+
+    int RMS_sine;
+    int RMS_triangle;
+    int RMS_square;
+    int wavetype;
+
+    set_DCO(clk);                           //set the system clocks
 
     WDT_A->CTL = WDT_A_CTL_PW |             // Stop WDT
                  WDT_A_CTL_HOLD;
 
-    P5->SEL1 |= BIT4;                       // Configure P5.4 for ADC
-    P5->SEL0 |= BIT4;
-    P1->SEL0 |= BIT2 | BIT3;                // set 2-UART function
-
-
-    //Configure PIN for sampling frequency measurements
-    P6->DIR &=~ BIT5;   //input
-    P6->IE |= BIT5;     //enable interrupt on pin
-    P6->IES &=~ BIT5;    //set up for interrupt trigger on low-to-high transition
-
-
-    // Configure UART
-    EUSCI_A0->CTLW0 |= EUSCI_A_CTLW0_SWRST;           // Put eUSCI in reset
-    EUSCI_A0->CTLW0 = EUSCI_A_CTLW0_SWRST |           // Remain eUSCI in reset
-                      EUSCI_B_CTLW0_SSEL__SMCLK;      // Configure eUSCI clock source for SMCLK
-
-    // Baud Rate calculation || 12000000/(16*9600) = 78.125 || Fractional portion = 0.125
-    // User's Guide Table 21-4: UCBRSx = 0x10 || UCBRFx = int ( (78.125-78)*16) = 2
-    EUSCI_A0->BRW = 78;
-    EUSCI_A0->MCTLW = (2 << EUSCI_A_MCTLW_BRF_OFS) | EUSCI_A_MCTLW_OS16;
-
-    EUSCI_A0->CTLW0 &= ~EUSCI_A_CTLW0_SWRST; // Initialize eUSCI
-    EUSCI_A0->IFG &= ~EUSCI_A_IFG_RXIFG;    // Clear eUSCI RX interrupt flag
-
-    //TIMER_A Initialization
-    TIMER_A0->CCTL[0] = TIMER_A_CCTLN_CCIE |        // TACCR0 interrupt enabled
-                        TIMER_A_CCTLN_SCS  |        //synchronous capture
-                        TIMER_A_CCTLN_CM_1 |        //capture on rising edge;
-                        TIMER_A_CCTLN_CCIS_0;       //Capture input from CCI register
-
-    //TIMER_A0->CCR[0] =  1000;                   //when to trigger interrupt
-    TIMER_A0->CTL = TIMER_A_CTL_SSEL__SMCLK |    // SMCLK, continuous mode
-                    TIMER_A_CTL_MC__CONTINUOUS | //count in continuous mode
-                    TIMER_A_CTL_ID_1;            //divide SMCLK by 2
-
+    init_DMM();                             //initialize (UART, ADC, TIMERS, INTERRUPTS)
 
     // Enable global interrupt
     __enable_irq();
 
-    // Enable ADC interrupt in NVIC module
-    NVIC->ISER[0] = 1 << ((ADC14_IRQn) & 31);
-    NVIC->ISER[1] = 1 << ((PORT6_IRQn) & 31);
-    NVIC->ISER[2] = 1 << ((TA0_0_IRQn) & 31);
-
-    //Sample&Hold=16, Sampling time: signal sourced from the sampling timer, ADC14 on
-    ADC14->CTL0 = ADC14_CTL0_SHT0_2 | ADC14_CTL0_SHP | ADC14_CTL0_ON;
-    ADC14->CTL1 = ADC14_CTL1_RES_3;         // Use sampling timer, 14-bit conversion results
-                                            //takes 16 clock cycles
-
-    ADC14->MCTL[0] |= ADC14_MCTLN_INCH_1;   // A1 ADC input select; Vref=AVCC
-    ADC14->IER0 |= ADC14_IER0_IE0;          // Enable interrupt to occur after ADC conv. complete
-
-    // Start sampling/conversion, interrupt is triggered after this
-    ADC14->CTL0 |= ADC14_CTL0_ENC | ADC14_CTL0_SC;  //start/enable new conversion
-
-    while (1)
+    while (1)                               //infinite loop
     {
-        if (capture_flag == 1)
+ //       mode = 0;
+        while (samples >= 0)                                //still within sampling period
         {
-            __disable_irq();
-            captureperiod = capturevalue[1] - capturevalue[0];
-            __enable_irq();
-
-            frequency = convert_to_frequency(int captureperiod);
-
-
-        }
-        /*if (global_flag == 1)                              //check if value has been updated
-        {
-            //calibrated_data result is in uV!!!
-            calibrated_data = (196)*digital_data + (725);  //slope = 196, y-int = 725
-            num_return = convert_data(calibrated_data);    //num_return returns a 32 bit int. with four characters within it
-
-            answer[0] = num_return >> 24;       //ones place
-            answer[2] = num_return >> 16;       //tenths place
-            answer[3] = num_return >> 8;        //hundredths place
-            answer[4] = num_return;             //thousandths place
-
-            while (x<5)                         //Display 5 ASCII characters to the Serial Terminal
+            ADC14->CTL0 |= ADC14_CTL0_ENC | ADC14_CTL0_SC;  //start/enable new conversion
+            if (global_flag == 1)                           //if ADC sampled
             {
-                EUSCI_A0->TXBUF = answer[x];    //Transmit character to TXBUF
-                x ++;
-                delay_ms(1, clk);               //Delay since sending to TXBUF takes cycles
+                samples --;                                 //decrement sample count
+                data = digital_data;                        //save ADC data
+                if (mode == 1)                              //DC Mode
+                {
+                    total += data;                          //running sum
+                }
+                else                                        //AC mode
+                {
+                    if (minimum > data)                     //check for min
+                        minimum = data;
+                    if (maximum < data)                     //check for max
+                        maximum = data;
+
+                    total += data;                          //running sum
+
+                    squared_sum = squared_sum + (data*data);    //running squared sum for RMS
+                }
+                global_flag = 0;                                //clear flag
             }
-            x = 0;
+        }
+        maximum = 0;                                            //reset max and min
+        minimum = 16384;
 
-            EUSCI_A0->TXBUF = 0x0D;                        //enter, new line
+        if (mode == 1)                                          //determine sample period based off mode
+            samples = 500;
+        else
+            samples = 50000;
 
-            delay_ms(500,clk);                             //delay before next sample
-            ADC14->CTL0 |= ADC14_CTL0_ENC | ADC14_CTL0_SC; //start/enable new conversion
-            global_flag = 0;                               //clear flag
-            delay_ms(1, clk);                              // Delay so that digital_data can get updated
-        }*/
+        if (mode == 0)                                          //AC mode
+        {
+            /*if (capture_flag == 1){
+                difference = capturevalue[1] - capturevalue[0];
+                difference += timer_count*65535;
+                capture_flag = 0;
+                timer_count = 0;
+            }*/
+            //frequency = get_freq();
+            /*if (frequency < 20 || frequency >1100)
+            {
+                previous = 16383;
+                while (h_l < 2){
+                    cycles ++;
+                    if ((digital_data > DC_voltage) && (digital_data > previous)){
+                        index[h_l] = cycles;
+                        h_l ++;
+                    }
+                    previous = digital_data;
+                    ADC14->CTL0 |= ADC14_CTL0_ENC | ADC14_CTL0_SC; //start/enable new conversion
+                }
+
+
+                while (P2 -> IN & BIT6 != BIT6);
+                while (h_l < 2){
+                    current = (P2->IN & BIT6);
+                    cycles += 9;
+                    if (h_l == 0 && (current == 0))
+                    {
+                        h_l ++;
+                        delay_us(5, clk);
+                    }
+                    if (h_l == 1 && (current == BIT6))
+                        h_l ++;
+                }
+                h_l = 0;
+                difference = index[1]-index[0];
+                frequency = difference/24e6;
+                cycles = 0;
+            }*/
+            frequency = difference/375000;                            //frequency in cycles/s
+            square_avg = squared_sum/samples;                       //average squared sum
+            RMS_data = square_rt(square_avg);                       //take square root
+            DC_voltage = total/samples;                             //average sum
+            peak2peak = maximum - minimum;                          //obtain raw peak to peak
+
+            RMS_sine = (DC_voltage*DC_voltage) + (peak2peak*peak2peak)/8;
+            RMS_sine = square_rt(RMS_sine);
+
+            //reset sums
+            total = 0;
+            squared_sum = 0;
+        }
+        else if (mode == 1)                                         //DC modde
+        {
+            peak2peak = 0;
+            RMS_data = 0;
+            DC_voltage = total/samples;
+            total = 0;
+            frequency = 0;
+        }
+
+        //calibrated raw data into uV
+        calibrated_pp = (189)*peak2peak;
+        calibrated_DC = (188)*DC_voltage + 725;
+        calibrated_RMS = (189)*RMS_data;
+
+        //covert to Volts
+        pp_answer = calibrated_pp/1e6;
+        RMS_answer = calibrated_RMS/1e6;
+        DC_answer = calibrated_DC/1e6;
+
+        __disable_irq();                                                //disable interrupts
+        string_to_terminal(RMS_answer, pp_answer, DC_answer, frequency, mode); //print answers
+        __enable_irq();                                                 //enable interrupt
+
+        if (mode > 2)
+            mode = 0;
     }
 }
 
@@ -156,35 +195,52 @@ void ADC14_IRQHandler(void) {
     ADC14->CLRIFGR1 |= ADC14_CLRIFGR1_CLRHIIFG; //clear flag
     digital_data = ADC14->MEM[0];               //read in ADC converted data and store.
     global_flag = 1;                            //set flag
-
 }
 
-//Frequency Sampling Interrupts
-void PORT6_IRQHandler(void){
 
-    static int capturecount = 0;
+//TIMER A interrupt handler (using captures to determine frequency)
+void TA0_N_IRQHandler(void){
+    //capture counter
+    volatile static uint32_t capture_count = 0;
 
-    P6->IFG &=~ BIT5; //clear flag
+    if (TIMER_A0->CTL & TIMER_A_CTL_IFG)            //check for overflow
+        timer_count ++;
 
-    if (TIMER_A0 -> CCTL[0] & TIMER_A_CCTLN_CCIFG)
+    TIMER_A0 -> CTL &=~ TIMER_A_CTL_IFG;            //clear overflow flag
+
+    if (TIMER_A0->CCTL[2] & TIMER_A_CCTLN_CCIFG){   //capture interrupt
+        capturevalue[capture_count] = TIMER_A0->CCR[2]; //save capture values
+        capture_count ++;
+        if (capture_count == 2){                        //after capturing two riding edges
+            //calculate total number of ticks on timer clock
+            difference = capturevalue[1] - capturevalue[0];
+            difference += timer_count*65535;
+            capture_flag = 0;
+            timer_count = 0;
+            capture_count = 0;
+        }
+        TIMER_A0->CCTL[2] &=~ TIMER_A_CCTLN_CCIFG;
+
+    }
+}
+
+// UART interrupt service routine to set Mode between DC and AC
+void EUSCIA0_IRQHandler(void)
+{
+    char received;
+
+    if (EUSCI_A0->IFG & EUSCI_A_IFG_RXIFG)    //receive interrupt flag triggered
     {
-        capturevalue[capturecount] = TIMER_A0 -> CCR[0];
-        capturecount ++;
-        if (capturecount == 2)
+        // Check if the TX buffer is empty first
+        while(!(EUSCI_A0->IFG & EUSCI_A_IFG_TXIFG));
+        received = EUSCI_A0->RXBUF;     //assign received char to variable
+
+        if (received == ' ')          //if received is a space
         {
-            capturecount = 0;
-            capture_flag = 1;
+           if (mode == 0)
+               mode = 1;
+           else
+               mode = 0;
         }
     }
-
-
-
-}
-
-//Timer A Interrupt Handler
-void TA0_0_IRQHandler(void){
-
-
-    TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;  //clear flag
-
 }
