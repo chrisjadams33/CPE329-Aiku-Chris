@@ -35,10 +35,12 @@ void main(void)
     int REDp2p = 0;
     int IRp2p = 0;
     float sat_level = 0;
-    //int period = ____;          // need to figure out how many samples
-    //int samples = period;
+    int period = 50000;          // need to figure out how many samples
+    int samples = period;
     uint16_t data;
     int avg_cycles;
+    uint32_t BPM_LCD, SPO_LCD;
+
 
     //calibrated data in uV
     int REDcalibrated_pp, IRcalibrated_pp;
@@ -66,7 +68,8 @@ void main(void)
 	//CS->CTL1 |= CS_CTL1_DIVA_7;             //divide ACLK by 128 ==> new ACLK freq = 32.768k/128 = 256Hz
     //CS->KEY = 0;                            //lock CS register
 
-/*    //button input set up: P2.5 is input
+    //button input set up: P2.5 is input
+	//***Do we want to add another button for MATLAB interfacing?
     button_init();
 
 	//ADC init and interrupt set up
@@ -81,23 +84,24 @@ void main(void)
     char Sat_display[] = "SPO2: ";
     char BPM_display[] = "BPM: ";*/
 
+    //INITIALIZE UART
 
     //Enable global interrupt
     __enable_irq();
 
     //T-gate testing
-	while(1){
+/*	while(1){
 	    P5->OUT |= BIT1;
 	    delay_ms(1000, clk);
 	    P5->OUT &=~ BIT1;
 	    delay_ms(1000, clk);
 
 	}
-}
+}*/
 
 
 
-/*    while (1)                               //infinite loop
+   while (1)                               //infinite loop
     {
         if (measure_flag == 1)
         {
@@ -113,6 +117,7 @@ void main(void)
             delay_us(50, clk);
 
             //consider slowing down sampling, probably would have to use another timer
+            //**can
 
             while (samples >= 0)                                //still within sampling period
             {
@@ -163,7 +168,9 @@ void main(void)
 
             //CALCULATION FUNCTION FOR SPO AND BPM
             sat_level = get_sat_level(REDp2p, IRp2p);
+            SPO_LCD = convert_SPO(sat_level);
             BPM_data = get_BPM_data(avg_cycles);
+            BPM_LCD = convert_BPM(BPM_data);
 
             //PRINT MEASURED VALUES ON LCD
             LCD_CMD(clear_display, clk);         //set ddram address top left
@@ -172,15 +179,27 @@ void main(void)
             delay_us(50, clk);
             write_string(Sat_display, clk);
             delay_us(50, clk);
+
             //WRITE SPO2 value
+            LCD_write((SPO_LCD >> 8), clk);
+            delay_us(50, clk);
+            LCD_write(SPO_LCD, clk);
+            delay_us(50, clk);
+            LCD_write('%', clk);
             delay_us(50,clk);
+
             LCD_CMD(bottom_row, clk);            //set ddram address to bottom row
             delay_us(50, clk);
             write_string(BPM_display, clk);
             delay_us(50, clk);
             //WRITE BPM value
+            if ((SPO_LCD && 0xFFFF0000) != 0)
+                LCD_write((SPO_LCD >> 16), clk);
             delay_us(50, clk);
-
+            LCD_write((SPO_LCD >> 8), clk);
+            delay_us(50, clk);
+            LCD_write(SPO_LCD, clk);
+            delay_us(50, clk);
         }
         //if (__button is triggered high__)       //check whatever pin the button is on
         if ((P2->IN &= BIT5) == BIT5)             //check whatever pin the button is on
@@ -239,6 +258,6 @@ void TA0_N_IRQHandler(void){
         }
     }
     TIMER_A0->CCTL[2] &=~ TIMER_A_CCTLN_CCIFG;
-}*/
+}
 
 

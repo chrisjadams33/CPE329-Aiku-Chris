@@ -6,17 +6,17 @@
  *      Author: Aiku
  */
 
-float get_BPM_data(int avg_cycles){
+int get_BPM_data(int avg_cycles){
 
-    float BPM = 0;
+    int BPM = 0;
 
-    BPM = (128/avg_cycles)*60;            //128Hz is the timer clock freq
+    BPM = (128*600/avg_cycles);            //128Hz is the timer clock freq
 
     //convert digital BPM data to decimal
 
     //place decimal values into string so prob want this function to return a char
 
-
+    return BPM;
 }
 
 
