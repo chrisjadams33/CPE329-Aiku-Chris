@@ -1,6 +1,5 @@
 #include "msp.h"
 
-//need to redo comments
 uint32_t convert_BPM(uint32_t calibrated_data){
 
     char hundreds_place = 0x00;
