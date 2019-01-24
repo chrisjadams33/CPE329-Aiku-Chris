@@ -10,7 +10,7 @@ fftx = fft(x);
 
 figure(figure_num)
 subplot(2, 1, 1)
-stem(Fd, abs(fftx)/Mx, '.', 'MarkerSize', 20, 'Linewidth', 2);
+stem(Fd, abs(fftx)/Mx, '.', 'MarkerSize', 10, 'Linewidth', 1.25);
 xlabel('Sample index')
 ylabel('DFT Magnitude')
 title('Digital Frequency Response of Filter')
@@ -18,7 +18,7 @@ title('Digital Frequency Response of Filter')
 fa = Fd*fsample;
 
 subplot(2, 1, 2)
-stem(fa, abs(fftx)/Mx, '.', 'MarkerSize', 20, 'Linewidth', 2);
+stem(fa, abs(fftx)/Mx, '.', 'MarkerSize', 10, 'Linewidth', 1.25);
 xlabel('Sample index')
 ylabel('DFT Magnitude')
 title('Analog Frequency Response of Filter')
