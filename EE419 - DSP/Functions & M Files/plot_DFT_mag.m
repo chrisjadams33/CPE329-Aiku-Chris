@@ -23,5 +23,6 @@ xlabel('Sample index')
 ylabel('DFT Magnitude')
 title('Analog Frequency Response of Filter')
 
+DFTx = abs(fftx)/Mx;
 
 end
