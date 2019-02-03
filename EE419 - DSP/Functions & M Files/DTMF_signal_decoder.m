@@ -1,18 +1,22 @@
 function [key_num] = DTMF_signal_decoder(test_tone, fs, figure_num)
-%This function takes _ arguments: 
+%This function takes a time domain signal in '.mat' format and the sampling
+%frequency as inputs. The function takes the FFT of the signal and creates
+%a plot of the magnitude response. The function finds the presence of two
+%particular frequencies correponding to the row and col. of a keypad press.
+%The function ultimately returns the which key was pressed on the keypad.
 
 str = 0;
 
-xn = test_tone;                     %time domain test tone
-[DFTx, Fd] = plot_DFT_mag(xn, fs, figure_num);   %plot the DFT max
+xn = test_tone;                                  %time domain test tone
+[DFTx, Fd] = plot_DFT_mag(xn, fs, figure_num);   %plot the DFT magn.
 
 %find the col peak
 Tacq = 0.5;
 Mx = length(xn);
 DFTx_mag  = abs(DFTx); 
 fa_max_1_index = find(DFTx_mag == max(DFTx_mag)); %returns indexes for two peaks (array) of col
-DFTx_max_1 = DFTx_mag(fa_max_1_index(1))/(fs*Tacq);   %mag. divided by M 
-fa_val(1) = fa_max_1_index(1)/Mx*fs;      % index doesn't provide enough info
+DFTx_max_1 = DFTx_mag(fa_max_1_index(1))/(fs*Tacq); %mag. divided by M 
+fa_val(1) = fa_max_1_index(1)/Mx*fs;% index doesn't provide enough info
                                     % to get fa value, quantify the index #
                                     
 %find the row peak 
@@ -20,11 +24,12 @@ DFTx_mag([fa_max_1_index(1) - 5: fa_max_1_index(1) + 5]) = 0;  %set max of col t
 DFTx_mag([fa_max_1_index(2) - 5: fa_max_1_index(2) + 5]) = 0;  %set max of col to 0
 
 fa_max_2_index = find(DFTx_mag == max(DFTx_mag)); %returns indexes for two peaks (array) of row
-DFTx_max_2 = DFTx_mag(fa_max_2_index(1))/(fs*Tacq);   %mag. divided by M 
-fa_val(2) = fa_max_2_index(1)/Mx*fs;      % index doesn't provide enough info
-                                         % to get fa value, quantify the index #
+DFTx_max_2 = DFTx_mag(fa_max_2_index(1))/(fs*Tacq); %mag. divided by M 
+fa_val(2) = fa_max_2_index(1)/Mx*fs;% index doesn't provide enough info
+                                    % to get fa value, quantify the index #
 
-fa_val = sort(fa_val, 'descend');                                         
+fa_val = sort(fa_val, 'descend');   % in case the row and col peak height 
+                                    % is not consistent
                                         
 %determine which key was pressed
 fc1 = 1209; fc2 = 1336; fc3 = 1477; fc4 = 1633;
