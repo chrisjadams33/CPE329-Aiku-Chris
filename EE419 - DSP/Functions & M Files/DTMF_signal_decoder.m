@@ -20,13 +20,17 @@ fa_val(1) = fa_max_1_index(1)/Mx*fs;% index doesn't provide enough info
                                     % to get fa value, quantify the index #
                                     
 %find the row peak 
-DFTx_mag([fa_max_1_index(1) - 5: fa_max_1_index(1) + 5]) = 0;  %set max of col to 0
-DFTx_mag([fa_max_1_index(2) - 5: fa_max_1_index(2) + 5]) = 0;  %set max of col to 0
+if (fa_val(1) > 500 && fa_val(1) < 2000)
+    DFTx_mag([fa_max_1_index(1) - 5: fa_max_1_index(1) + 5]) = 0;  %set max of col to 0
+    DFTx_mag([fa_max_1_index(2) - 5: fa_max_1_index(2) + 5]) = 0;  %set max of col to 0
+    DFTx_mag([2000/fs*Mx:end]) = 0;
+end
 
 fa_max_2_index = find(DFTx_mag == max(DFTx_mag)); %returns indexes for two peaks (array) of row
 DFTx_max_2 = DFTx_mag(fa_max_2_index(1))/(fs*Tacq); %mag. divided by M 
 fa_val(2) = fa_max_2_index(1)/Mx*fs;% index doesn't provide enough info
                                     % to get fa value, quantify the index #
+                                    
 
 fa_val = sort(fa_val, 'descend');   % in case the row and col peak height 
                                     % is not consistent
