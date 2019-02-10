@@ -2,7 +2,8 @@
 % load sonar pulse data
 xn = TxPulse;
 Mx = length(TxPulse);
-% load echo data
+
+% load submarine echo data
 yn_1 = TyphoonSubEcho; yn_2 = AkulaSubEcho; yn_3 = LosAngelesSubEcho; 
 My_1 = length(yn_1); My_2 = length(yn_2); My_3 = length(yn_3);
 
@@ -44,6 +45,7 @@ title('Time-domain Waveform: LA Sub Echo')
 Fd_x = (0:Mx-1)/Mx; 
 Fd_y_1 = (0:My_1-1)/My_1; Fd_y_2 = (0:My_2-1)/My_2; Fd_y_3 = (0:My_3-1)/My_3; 
 
+%acquire analog frequencies from digital ones
 fa_x = Fd_x*fs;
 fa_y_1 = Fd_y_1*fs; fa_y_2 = Fd_y_2*fs; fa_y_3 = Fd_y_3*fs; 
 

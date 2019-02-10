@@ -5,27 +5,29 @@ Mx = length(xn);
 M = My + Mx - 1;       %number of samples for fft is sum of lenghts - 1
 n = 2^(nextpow2(M));   %for most efficient fft computation
 
-extra = floor(n-M);
-index = (0:M-1) - floor(M/2);
+extra = floor(n-M);    %to see how much is going to be zero padded
+index = (0:M-1);
 
 Xk = fft(xn, n);       %fft of x[n]
-Yk = fft(yn, n);       %fft of h[n]
-Ck = Xk.*conj(Yk);      %convolution in time domain is multiplication in freq. 
+Yk = fft(yn, n);       %fft of y[n]
+Ck = Xk.*conj(Yk);     % to compute cross correlation conv. in time domain is multipl. in freq. 
 
-cn = real(ifft(Ck));   %get good parts of fft of y[n] after doing the inv fft
+cn = real(ifft(Ck));   %compute the cross correlation of x and y
 
-rxx = real(ifft(Xk.*conj(Xk)));
-ryy = real(ifft(Yk.*conj(Yk)));
-Cxy_temp = cn/(sqrt(rxx(1)*ryy(1)));
+rxx = real(ifft(Xk.*conj(Xk))); %compute autocorrelation of x
+ryy = real(ifft(Yk.*conj(Yk))); %compute autocorrelation of y 
+Cxy_temp = cn/(sqrt(rxx(1)*ryy(1))); %compute the normalized cross correlation of x and y
 
-Cxy_neg = Cxy_temp((n/2)+1:end);
-Cxy_pos = Cxy_temp(1:(n/2));
+Cxy = Cxy_temp(1:end-extra);
 
-Cxy = [Cxy_neg Cxy_pos];
-Cxy = Cxy(extra/2+1:end-extra/2);
+%get rid of the zero padding 
+Cxy_neg = Cxy((M/2)+1:end); 
+Cxy_pos = Cxy(1:(M/2));
+%Cxy = [Cxy_neg Cxy_pos];
+%Cxy = Cxy(extra/2+1:end-extra/2);
 
 %Generate plots
-    figure(1)
+    figure
 
     %make stem plot of input
     subplot(3, 1, 1)
