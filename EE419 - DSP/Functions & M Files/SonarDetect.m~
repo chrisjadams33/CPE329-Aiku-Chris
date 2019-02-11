@@ -1,7 +1,6 @@
 function [sub_type, disp_dist] = SonarDetect(xn)
 %This funtion takes 1 input (xn) which must be an echo signal and will
-%return the type of sub/if there is a rock in the path of the echo and at
-%what distance the obkect is
+%return the type of sub/if there is a rock in the path of the e
 
 load('SubSonar', '-mat')
 %xn_envelope = abs(hilbert(xn));
@@ -121,14 +120,14 @@ fs = 50000; %sampling frequency
 vs = 1500;  %speed of sound under water in m/s 
 
 if (~strcmp('Nothing in path', sub_type))
-    time_tx_rx = ((peak_i + length(TxPulse)/2)/fs); %calculate time for tx and rx based off of the peak_i index
+    time_tx_rx = (peak_i/fs); %calculate time for tx and rx based off of the peak_i index
     dist = (time_tx_rx/2)*vs; %dist. to object is only half of time_tx_rx
 else
     dist = 0;
 end
 
 if (~strcmp('Nothing in path', sub_type_2))
-    time_tx_rx_2 = ((peak_ii + length(TxPulse)/2)/fs); %calculate time for tx and rx based off of the peak_i index
+    time_tx_rx_2 = (peak_ii/fs); %calculate time for tx and rx based off of the peak_i index
     dist_2 = (time_tx_rx_2/2)*vs; %dist. to object is only half of time_tx_rx
 else
     dist_2 = 0;

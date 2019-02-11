@@ -20,8 +20,14 @@ rxx = real(ifft(Xk.*conj(Xk))); %compute autocorrelation of x
 ryy = real(ifft(Yk.*conj(Yk))); %compute autocorrelation of y 
 Cxy_temp = cn/(sqrt(rxx(1)*ryy(1))); %compute the normalized cross correlation of x and y
 
-Cxy = Cxy_temp(1:end-extra);
-%Cxy = [Cxy_temp((Mx/2):end-extra+1) Cxy_temp(1:(Mx/2)-1)];
+%Cxy = Cxy_temp(1:end-extra);
+Cxy = [Cxy_temp((Mx/2)+1:end-extra) Cxy_temp(1:(Mx/2)-1)];
+
+%get rid of the zero padding 
+%Cxy_neg = Cxy((M/2)+1:end); 
+%Cxy_pos = Cxy(1:(M/2));
+%Cxy = [Cxy_neg Cxy_pos];
+%Cxy = Cxy(extra/2+1:end-extra/2);
 
 %Generate plots
     figure
