@@ -1,4 +1,4 @@
-function [Ak,Bk,HF,Fd,hn,n]= show_filter_responses_pz(poles,zeros,K,fsample,num_of_f_points, num_of_n_points,figure_num)
+function [Ak,Bk,HF,Fd,hn,n, maximum]= show_filter_responses_pz(poles,zeros,K,fsample,num_of_f_points, num_of_n_points,figure_num)
 % This function takes multiple arguments: the poles and zeros of the
 % system, the DC gain (K), the sampling frequency, the number of f and n
 % points for which to plot, and the figure number. The function returns
@@ -28,6 +28,7 @@ HF_mag = abs(HF);
 Fd_max_index = find(HF_mag == max(HF_mag), 1, 'first');  
 Fd_max = Fd(Fd_max_index)
 HF_max = HF_mag(Fd_max_index)
+maximum = HF_max;
 
 Fd_min_index = find(HF_mag == min(HF_mag), 1, 'first');
 Fd_min = Fd(Fd_min_index)
