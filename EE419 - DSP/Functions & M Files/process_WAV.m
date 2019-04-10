@@ -125,7 +125,7 @@ echo_filter_hn = echo_filter(Dk_delays_msec,alphak_gains,fs);
 
 %combine the equalization filter resp. with echo filter resp.
 best_filter = fftconv(equalization_filter_hn, echo_filter_hn);
-freqz(best_filter, [1], 2^20)
+freqz(best_filter, 1, 2^20)
 
 % Load Audio Signal
 [audio_in,fs] = audioread(input_wav);
@@ -146,12 +146,12 @@ end
 if stereo == 1
     Ch1_processed = fftconv(Ch1,best_filter);
     Ch2_processed = fftconv(Ch2,best_filter);
-    Processed_audio(1,:) = Ch1_processed;
-    Processed_audio(2,:) = Ch2_processed;
+    Processed_audio(1,:) = Ch1_processed/max(abs(Ch1_processed));
+    Processed_audio(2,:) = Ch2_processed/max(abs(Ch2_processed));
     Processed_audio = Processed_audio.'; %re-transpose after processing
 else
     Ch1_processed = fftconv(audio_in,best_filter);
-    Processed_audio(1,:) = Ch1_processed;
+    Processed_audio(1,:) = Ch1_processed/max(abs(Ch1_processed));
     Processed_audio = Processed_audio.'; %re-transpose after processing    
 end
 
@@ -201,7 +201,7 @@ for x=1:length(angle_rad)
     end
 end
 
-Hk_angle = exp(j*angle_rad);    %Hk_angles 
+Hk_angle = exp(1j*angle_rad);    %Hk_angles 
 Hk = HF_mag_samples.*Hk_angle;  %Hk in complex form
 hn = real(ifft(Hk));            %get the unit sample response
 
@@ -330,4 +330,5 @@ else
     ylabel('Magnitude Response')
     title('Y[k] Spectrum')
 
+end
 end
